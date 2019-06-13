@@ -37,6 +37,15 @@ class WaterfallIntensityPipeline:
         num_count = int(timedelta * self.fh.info.sample_rate)
         return self.read_count(num_count)
 
+    def read_time_div(self, timedelta, num):
+        """Read a number of samples corresponding to a particular time
+        interval, making sure that the nmber of samples read is divisible
+        by num. 
+
+        Returns (data, num_samples_read, time_interval_read). 
+        """
+        # TODO
+
 class FoldPipeline:
     def __init__(self, prevline, n_phase, phase, step=None, start=0,
         average=True, samples_per_frame=1):
@@ -69,7 +78,7 @@ def remove_rfi(data, emptysample=None, fill=np.nan):
     threshold = 0.8 * baseline + 0.2 * peak
     return np.where(emptysample > threshold, fill, data) 
 
-def bin(data, time_bin_sz, freq_bin_sz):
+def bin_data(data, time_bin_sz, freq_bin_sz):
     """Bin the data to the desired bin sizes."""
 
     return data.reshape(
