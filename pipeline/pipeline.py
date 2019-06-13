@@ -68,3 +68,13 @@ def remove_rfi(data, emptysample=None, fill=np.nan):
     peak = np.max(emptysample)
     threshold = 0.8 * baseline + 0.2 * peak
     return np.where(emptysample > threshold, fill, data) 
+
+def bin(data, time_bin_sz, freq_bin_sz):
+    """Bin the data to the desired bin sizes."""
+
+    return data.reshape(
+            data.shape[0] // time_bin_sz,
+            time_bin_sz,
+            *(data.shape[1:-1]),  # also include other axes in the middle!
+            data.shape[-1] // freq_bin_sz,
+            freq_bin_sz).mean((1, 3))
