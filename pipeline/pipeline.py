@@ -47,3 +47,24 @@ class FoldPipeline:
         )
 
         self.outstream = self.folded
+
+def remove_rfi(data, emptysample=None, fill=np.nan):
+    """Return data with RFI frequencies removed, replacing them with nans
+    or zeroes.
+    
+    If fill is 'nan' or nan, set to nans. If fill is 0, '0', or 'zero', set
+    to zeroes.
+    """
+    if emptysample is None:
+        emptysample = data
+    if fill in ['nan', np.nan]:
+        fill = np.nan
+    elif fill in [0, '0', 'zero']:
+        fill = 0
+    # i guess i could add a valueerror here if i wanted to
+
+    emptysample = np.nansum(emptysample, 0)  # over time
+    baseline = np.median(emptysample)
+    peak = np.max(emptysample)
+    threshold = 0.8 * baseline + 0.2 * peak
+    return np.where(emptysample > threshold, fill, data) 
