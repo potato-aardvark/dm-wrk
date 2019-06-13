@@ -17,6 +17,8 @@ class WaterfallIntensityPipeline:
 			sideband=sideband, FFT=fft)
         self.squared = Square(self.dedispersed)
 
+		self.outstream = self.squared
+
     def read_raw(self, count=None):
         """Read from the stream, without summing over the polarisation axis."""
         return self.squared.read(count)
@@ -44,3 +46,4 @@ class FoldPipeline:
 			average=average, samples_per_frame=samples_per_frame
 		)
 
+		self.outstream = self.folded
