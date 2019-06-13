@@ -161,6 +161,6 @@ tags
 
 # Also ignore certain plotting and data files
 *plots/
-*data-ignore/
+*data/
 wheres.py
 logs/
