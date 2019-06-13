@@ -11,13 +11,13 @@ class WaterfallIntensityPipeline:
         samples_per_frame=None, frequencies=None, sideband=None, fft=None):
         self.fh = vdif.open(datafiles)
         self.dedispersed = Dedisperse(self.fh, dm,
-			reference_frequency=reference_frequency,
+            reference_frequency=reference_frequency,
             samples_per_frame=samples_per_frame, 
-			frequency=frequencies, 
-			sideband=sideband, FFT=fft)
+            frequency=frequencies, 
+            sideband=sideband, FFT=fft)
         self.squared = Square(self.dedispersed)
 
-		self.outstream = self.squared
+        self.outstream = self.squared
 
     def read_raw(self, count=None):
         """Read from the stream, without summing over the polarisation axis."""
@@ -38,12 +38,12 @@ class WaterfallIntensityPipeline:
         return self.read_count(num_count)
 
 class FoldPipeline:
-	def __init__(self, prevline, n_phase, phase, step=None, start=0,
-		average=True, samples_per_frame=1):
-		self._prevline = prevline
-		self.folded = Fold(
-			self._prevline.squared, n_phase, phase, step=step, start=start,
-			average=average, samples_per_frame=samples_per_frame
-		)
+    def __init__(self, prevline, n_phase, phase, step=None, start=0,
+        average=True, samples_per_frame=1):
+        self._prevline = prevline
+        self.folded = Fold(
+            self._prevline.squared, n_phase, phase, step=step, start=start,
+            average=average, samples_per_frame=samples_per_frame
+        )
 
-		self.outstream = self.folded
+        self.outstream = self.folded
