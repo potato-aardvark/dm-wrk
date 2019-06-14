@@ -32,10 +32,8 @@ class WaterfallIntensityPipeline:
         Read a number of samples corresponding to a particular time
         interval. Rounds down.
         """
-
-        timedelta = timedelta.to(u.s)
-        num_count = int(timedelta * self.fh.info.sample_rate)
-        return self.read_count(num_count)
+        num_samples = int((self.outstream.sample_rate * timedelta).to(u.one))
+        return self.read_count(num_samples)
 
     def read_time_div(self, timedelta, num):
         """Read a number of samples corresponding to a particular time
@@ -44,7 +42,8 @@ class WaterfallIntensityPipeline:
 
         Returns (data, num_samples_read, time_interval_read). 
         """
-        # TODO
+        num_samples = int((self.outstream.sample_rate * timedelta).to(u.one))
+        return self.read_count(num_samples - (num_samples % num))
 
 class FoldPipeline:
     def __init__(self, prevline, n_phase, phase, step=None, start=0,
