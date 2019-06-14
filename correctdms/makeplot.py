@@ -8,8 +8,6 @@ import matplotlib.pyplot as plt
 import os  # for path.join
 import argparse
 
-raise NotImplemented('you should probably implement pipeline.WaterfallIntensityPlot.read_time_div() before running this')
-
 # python makeplot.py starttime timeinterval dm runname 
 #   timebin_sz freqbin_sz files
 # 
