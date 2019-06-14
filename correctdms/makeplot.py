@@ -69,7 +69,8 @@ rfirmdata = remove_rfi(data, rfifind, 0)
 plt.imshow(
         rfirmdata.transpose(),
         aspect='auto',
-        extent=[0, args.timedelta.to(u.ms), 400, 800])
+        extent=[0, args.timedelta.to(u.ms), 400, 800]
+)
 plt.xlabel('time (ms)')
 plt.ylabel('freq (MHz)')
 if args.plotsave_loc:
