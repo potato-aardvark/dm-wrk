@@ -2,6 +2,8 @@ import wheres, relwheres
 from pipeline import *
 
 import numpy as np
+from numpy.linalg import svd
+from baseband import vdif
 import astropy.time as astrotime
 import astropy.units as u
 import matplotlib.pyplot as plt
@@ -9,7 +11,7 @@ import os  # for path.join
 import argparse
 
 # python makeplot.py starttime timeinterval dm runname 
-#   timebin_sz freqbin_sz files
+#   timebin_sz freqbin_sz --data files
 # 
 # timeinterval in ms
 parser = argparse.ArgumentParser()
@@ -69,11 +71,13 @@ rfirmdata = remove_rfi(data, rfifind, 0)
 plt.imshow(
         rfirmdata.transpose(),
         aspect='auto',
-        extent=[0, args.timedelta.to(u.ms), 400, 800]
+        extent=[0, args.timedelta.to(u.ms).value, 400, 800]
 )
 plt.xlabel('time (ms)')
 plt.ylabel('freq (MHz)')
 if args.plotsave_loc:
     plt.savefig(os.path.join(args.plotsave_loc, args.runname + '.png'))
 if args.datasave_loc:
-    np.savez(rawdata, os.path.join(args.datasave_loc, args.runname + '.npz'))
+    np.savez(os.path.join(args.datasave_loc, args.runname + '.npz'), rawdata)
+
+print(svd(rfirmdata)[1][0])

@@ -7,9 +7,12 @@ from scintillometry.dispersion import Dedisperse
 from scintillometry.integration import Fold
 
 class WaterfallIntensityPipeline:
-    def __init__(self, datafiles, dm, reference_frequency=None,
+    def __init__(self, source_strm, dm, reference_frequency=None,
         samples_per_frame=None, frequencies=None, sideband=None, fft=None):
-        self.fh = vdif.open(datafiles)
+        if isinstance(source_strm, list):
+            self.fh = vdif.open(source_strm)
+        else:
+            self.fh = source_strm
         self.dedispersed = Dedisperse(self.fh, dm,
             reference_frequency=reference_frequency,
             samples_per_frame=samples_per_frame, 
