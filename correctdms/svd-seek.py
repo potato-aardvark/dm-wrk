@@ -69,5 +69,15 @@ def setup_pipeline(dm):
 def get_svd_dm(dm):
     return get_svd_pipeline(setup_pipeline(dm))
 
+curr_max_svd = -1
+curr_best_dm = None
+
 for curr_dm in np.arange(args.dm, args.dm2 + args.dm_step_sz, args.dm_step_sz):
+    svd_for_dm = get_svd_dm(curr_dm)
+    if svd_for_dm > curr_max_svd:
+        curr_max_svd = svd_for_dm
+        curr_best_dm = curr_dm
     logging.info('{:.9f} {:.9f}'.format(curr_dm, get_svd_dm(curr_dm))) 
+
+logging.info('best dm/svd: {:.9f} {:.9f}'.format(curr_best_dm, curr_max_svd)) 
+
