@@ -61,6 +61,7 @@ args = parser.parse_args()
 # set up the pipeline
 pl = WaterfallIntensityPipeline(
         args.data, args.dm, reference_frequency=800*u.MHz,
+        samples_per_frame=2**18,
         frequencies=np.linspace(800, 400, 1024)*u.MHz, sideband=1
 )
 pl.outstream.seek(args.starttime)
