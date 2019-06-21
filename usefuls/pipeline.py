@@ -77,7 +77,7 @@ def remove_rfi(data, emptysample=None, fill=np.nan):
     emptysample = np.nansum(emptysample, 0)  # over time
     baseline = np.median(emptysample)
     peak = np.max(emptysample)
-    threshold = 0.8 * baseline + 0.2 * peak
+    threshold = 0.9 * baseline + 0.1 * peak
     return np.where(emptysample > threshold, fill, data) 
 
 def bin_data(data, time_bin_sz, freq_bin_sz):
