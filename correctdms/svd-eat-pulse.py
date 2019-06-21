@@ -32,6 +32,7 @@ args = parser.parse_args()
 
 if args.plot_save_loc:
     import matplotlib.pyplot as plt
+    plt.rcParams['figure.figsize'] = (16, 12)
 
 data = np.load(args.npz_loc)
 # I don't remember how the data was saved
@@ -42,76 +43,119 @@ except KeyError:
         data = data['data']
     except KeyError:
         data = data['fulldata']
-svd_data = plm.remove_rfi(data, fill=0)  # svd needs data with 0s, not nans
-data = plm.remove_rfi(data, fill='nan')  # plotting should use data with nans
-binneddata = plm.bin_data(data, args.time_bin_sz, args.freq_bin_sz)
-binnedsvd_data = plm.bin_data(svd_data, args.time_bin_sz, args.freq_bin_sz)
-bdat_u, bdat_s, bdat_vh = la.svd(binnedsvd_data.T)
+
+# prefer to plot nans, but svd needs zeros
+svd_data = plm.remove_rfi(data, data[-100:], fill=0)
+data = plm.remove_rfi(data, data[-100:], fill='nan')
+binneddata = plm.bin_data(
+        data, args.time_bin_sz, args.freq_bin_sz
+)
+binnedsvd_data = plm.bin_data(
+        svd_data, args.time_bin_sz, args.freq_bin_sz
+)
+
+# RFI
+binneddata[:, 12] = np.nan
+binnedsvd_data[:, 12] = 0
+
+bdat_u, bdat_s, bdat_vh = la.svd(binnedsvd_data.T, full_matrices=False)
 if bdat_vh[0, 0] < 0:
     bdat_u *= -1
     bdat_vh *= -1
 
-modeone = bdat_vh[0, :] * bdat_s[0]
+bdat_s_m1 = bdat_s.copy()
+bdat_s_m1[1:] = 0  # or some other larger number
+svd_modeone = (bdat_u * bdat_s_m1 @ bdat_vh).T
 
-fit_modeone_to_data = lambda x, scale, offset: modeone[x] * scale + offset
-indices = np.arange(binneddata.shape[0])
+svd_resid = binneddata - svd_modeone
 
-svd_resid = np.empty_like(binneddata)
-
-# maybe there's a faster way to do this. idk, but this way is right and 
-# has only <1024 iterations anyways
-for i in range(binneddata.shape[1]):
-    if not np.any(np.isnan(binneddata[:, i]) | np.isinf(binneddata[:, i])):
-        (best_scale, best_offset), _ = opt.curve_fit(
-                fit_modeone_to_data,
-                indices,
-                binneddata[:, i],
-                p0=(0.01, 1)
-        )
-        svd_resid[:, i] = (binneddata[:, i]
-                - fit_modeone_to_data(indices, best_scale, best_offset))
-#         plt.plot(binneddata[:, i])
-#         plt.plot(fit_modeone_to_data(indices, best_scale, best_offset))
-#         plt.plot(svd_resid[:, i])
-#         plt.show()
-    else:
-        svd_resid[:, i] = np.nan
 if args.plot_save_loc:
-    plt.figure()
+    # pulse as waterfall
     plt.imshow(binneddata.transpose(),
             aspect='auto',
             extent=[0, args.time_total, args.minfreq, args.maxfreq]
     )
-    plt.colorbar()
     plt.suptitle(args.suptitle)
-    plt.xlabel('time (s)')
+    plt.xlabel('time (ms)')
     plt.ylabel('frequency (MHz)')
-    plt.savefig(os.path.join(args.plot_save_loc, args.runname)+'_waterfall.png')
+    plt.savefig(
+            os.path.join(args.plot_save_loc, args.runname) + 'pulse.png'
+    )
     
-    plt.figure()
+    # residuals as waterfall
     plt.imshow(svd_resid.transpose(),
             aspect='auto',
             extent=[0, args.time_total, args.minfreq, args.maxfreq]
     )
-    plt.colorbar()
-    plt.suptitle(args.suptitle + ', residuals')
-    plt.xlabel('time (s)')
+    plt.suptitle(args.suptitle)
+    plt.xlabel('time (ms)')
     plt.ylabel('frequency (MHz)')
     plt.savefig(os.path.join(args.plot_save_loc, args.runname) + '_resids.png')
     
-    plt.figure()
-    plt.plot(
-            np.linspace(0, args.time_total, indices.size),
-            fit_modeone_to_data(indices, 1, 0)
+    # svd mode 1 as waterfall
+    plt.imshow(svd_modeone.transpose(),
+            aspect='auto',
+            extent=[0, args.time_total, args.minfreq, args.maxfreq]
     )
-    plt.suptitle(args.suptitle + ', first mode of svd')
-    plt.xlabel('time (s)')
-    plt.ylabel('svd, first mode')
+    plt.suptitle(args.suptitle)
+    plt.xlabel('time (ms)')
+    plt.ylabel('frequency (MHz)')
     plt.savefig(os.path.join(args.plot_save_loc, args.runname) + '_svdmd1.png')
+    
+    plt.rcParams['figure.figsize'] = (12, 80)
+    
+    # pulse as lines
+    resid_scale = -2
+    plt.figure()
+    for freq_index in range(binneddata.shape[1]):
+        plt.plot(
+                np.linspace(0, args.time_total, binneddata.shape[0]),
+                binneddata[:, freq_index] + resid_scale * freq_index
+        )
+        if not np.any(np.isnan(binneddata[:, freq_index])):
+            plt.axhline(resid_scale * freq_index, color='black', lw=0.5)
+    plt.xlabel('time (ms)')
+    plt.ylabel('frequency')
+    plt.savefig(
+            os.path.join(args.plot_save_loc, args.runname) + '_pulseprf.png'
+    )
+    
+    # residual as lines
+    plt.figure()
+    for freq_index in range(svd_resid.shape[1]):
+        plt.plot(
+                np.linspace(0, args.time_total, binneddata.shape[0]),
+                svd_resid[:, freq_index] + resid_scale * freq_index
+        )
+        if not np.any(np.isnan(svd_resid[:, freq_index])):
+            plt.axhline(resid_scale * freq_index, color='black', lw=0.5)
+    plt.xlabel('time (ms)')
+    plt.ylabel('frequency')
+    plt.savefig(
+            os.path.join(args.plot_save_loc, args.runname) + '_residsprf.png'
+    )
+    
+    # mode one as lines
+    plt.figure()
+    for freq_index in range(svd_modeone.shape[1]):
+        plt.plot(
+                np.linspace(0, args.time_total, binneddata.shape[0]),
+                svd_modeone[:, freq_index] + resid_scale * freq_index
+        )
+        if not np.any(np.isnan(svd_modeone[:, freq_index])):
+            plt.axhline(resid_scale * freq_index, color='black', lw=0.5)
+    plt.xlabel('time (ms)')
+    plt.ylabel('frequency')
+    plt.savefig(
+            os.path.join(args.plot_save_loc, args.runname) + '_modeoneprf.png'
+    )
 
 if args.data_save_loc:
     np.savez(os.path.join(args.data_save_loc, args.runname),
             data=data,
             binneddata=binneddata,
-            svd_resid=svd_resid
+            svd_resid=svd_resid,
+            svd_u=bdat_u,
+            svd_s=bdat_s,
+            svd_vh=bdat_vh
     )
