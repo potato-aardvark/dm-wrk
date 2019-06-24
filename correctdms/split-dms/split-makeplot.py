@@ -66,6 +66,9 @@ parser.add_argument(
 parser.add_argument('--data', nargs='+', default=[], help='the data files')
 args = parser.parse_args()
 
+datasave_loc = 'makeplot-data/'
+plotsave_loc = 'makeplot-plots/'
+
 # set up the pipeline
 plhi = WaterfallIntensityPipeline(
         args.data, args.dm, reference_frequency=800*u.MHz,
@@ -98,9 +101,9 @@ plt.imshow(
 )
 plt.xlabel('time (ms)')
 plt.ylabel('freq (MHz)')
-if args.plotsave_loc:
-    plt.savefig(os.path.join(args.plotsave_loc, args.runname + '.png'))
-if args.datasave_loc:
-    np.savez(os.path.join(args.datasave_loc, args.runname + '.npz'), rawdata)
+if plotsave_loc:
+    plt.savefig(os.path.join(plotsave_loc, args.runname + '.png'))
+if datasave_loc:
+    np.savez(os.path.join(datasave_loc, args.runname + '.npz'), rawdata)
 
 print(svd(rfirmdata)[1][0])

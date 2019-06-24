@@ -40,7 +40,7 @@ parser.add_argument('--data', nargs='+', default=[], help='the baseband data fil
 args = parser.parse_args()
 
 logging.basicConfig(
-        filename='logs/{}.log'.format(args.runname),
+        filename='seek-data/{}.log'.format(args.runname),
         level=logging.DEBUG
 )
 

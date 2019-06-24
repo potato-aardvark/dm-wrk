@@ -16,8 +16,6 @@ parser.add_argument('npz_loc', help='where the data file is')
 parser.add_argument('time_bin_sz', type=int, help='# of samples in time bins')
 parser.add_argument('freq_bin_sz', type=int, help='# of channels in freq bins')
 parser.add_argument('runname', help='the name of this run')
-pltparser.add_argument('plot_save_loc', nargs='?', help='save the plot here')
-parser.add_argument('data_save_loc', nargs='?', help='save the residual here')
 
 # optional arguments for plotting purposes only
 pltparser.add_argument('time_total', type=float, nargs='?', default=25,
@@ -30,7 +28,11 @@ pltparser.add_argument('suptitle', nargs='?')
 
 args = parser.parse_args()
 
-if args.plot_save_loc:
+plot_save_loc = 'eat-plots/'
+data_save_loc = 'eat-data/'
+
+
+if plot_save_loc:
     import matplotlib.pyplot as plt
     plt.rcParams['figure.figsize'] = (16, 12)
 
@@ -69,7 +71,7 @@ svd_modeone = (bdat_u * bdat_s_m1 @ bdat_vh).T
 
 svd_resid = binneddata - svd_modeone
 
-if args.plot_save_loc:
+if plot_save_loc:
     # pulse as waterfall
     plt.imshow(binneddata.transpose(),
             aspect='auto',
@@ -79,7 +81,7 @@ if args.plot_save_loc:
     plt.xlabel('time (ms)')
     plt.ylabel('frequency (MHz)')
     plt.savefig(
-            os.path.join(args.plot_save_loc, args.runname) + 'pulse.png'
+            os.path.join(plot_save_loc, args.runname) + 'pulse.png'
     )
     
     # residuals as waterfall
@@ -90,7 +92,7 @@ if args.plot_save_loc:
     plt.suptitle(args.suptitle)
     plt.xlabel('time (ms)')
     plt.ylabel('frequency (MHz)')
-    plt.savefig(os.path.join(args.plot_save_loc, args.runname) + '_resids.png')
+    plt.savefig(os.path.join(plot_save_loc, args.runname) + '_resids.png')
     
     # svd mode 1 as waterfall
     plt.imshow(svd_modeone.transpose(),
@@ -100,7 +102,7 @@ if args.plot_save_loc:
     plt.suptitle(args.suptitle)
     plt.xlabel('time (ms)')
     plt.ylabel('frequency (MHz)')
-    plt.savefig(os.path.join(args.plot_save_loc, args.runname) + '_svdmd1.png')
+    plt.savefig(os.path.join(plot_save_loc, args.runname) + '_svdmd1.png')
     
     plt.rcParams['figure.figsize'] = (12, 80)
     
@@ -117,7 +119,7 @@ if args.plot_save_loc:
     plt.xlabel('time (ms)')
     plt.ylabel('frequency')
     plt.savefig(
-            os.path.join(args.plot_save_loc, args.runname) + '_pulseprf.png'
+            os.path.join(plot_save_loc, args.runname) + '_pulseprf.png'
     )
     
     # residual as lines
@@ -132,7 +134,7 @@ if args.plot_save_loc:
     plt.xlabel('time (ms)')
     plt.ylabel('frequency')
     plt.savefig(
-            os.path.join(args.plot_save_loc, args.runname) + '_residsprf.png'
+            os.path.join(plot_save_loc, args.runname) + '_residsprf.png'
     )
     
     # mode one as lines
@@ -147,11 +149,11 @@ if args.plot_save_loc:
     plt.xlabel('time (ms)')
     plt.ylabel('frequency')
     plt.savefig(
-            os.path.join(args.plot_save_loc, args.runname) + '_modeoneprf.png'
+            os.path.join(plot_save_loc, args.runname) + '_modeoneprf.png'
     )
 
-if args.data_save_loc:
-    np.savez(os.path.join(args.data_save_loc, args.runname),
+if data_save_loc:
+    np.savez(os.path.join(data_save_loc, args.runname),
             data=data,
             binneddata=binneddata,
             svd_resid=svd_resid,
