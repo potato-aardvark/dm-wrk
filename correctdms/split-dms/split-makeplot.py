@@ -1,7 +1,6 @@
 # TODO: correct reference_frequency. Should be 540 MHz + corresponding
 # time adjustment if not negligible
 
-import wheres, relwheres
 from pipeline import *
 import numpy as np
 from numpy.linalg import svd
