@@ -57,8 +57,8 @@ binnedsvd_data = plm.bin_data(
 )
 
 # RFI
-binneddata[:, 12] = np.nan
-binnedsvd_data[:, 12] = 0
+binneddata[:, 11] = np.nan
+binnedsvd_data[:, 11] = 0
 
 bdat_u, bdat_s, bdat_vh = la.svd(binnedsvd_data.T, full_matrices=False)
 if bdat_vh[0, 0] < 0:
