@@ -12,6 +12,7 @@ import os  # for path.join
 import argparse
 
 FREQ_CUTOFF = int(np.floor(np.interp(540, [400, 800], [1023, 0])))
+assert isinstance(FREQ_CUTOFF, int)
 
 # python makeplot.py starttime timeinterval dm runname 
 #   timebin_sz freqbin_sz --data files
@@ -86,16 +87,19 @@ pllo = WaterfallIntensityPipeline(
 pllo.outstream.seek(args.starttime)
 rawdatalo = pllo.read_time_div(args.timedelta, args.timebin_sz)
 
-rawdata = np.concatenate(rawdatahi[:FREQ_CUTOFF], rawdatalo[FREQ_CUTOFF:])
+rawdata = np.concatenate(
+        (rawdatahi[:, :FREQ_CUTOFF], rawdatalo[:, FREQ_CUTOFF:]),
+        axis=1
+)
 
 print(rawdata.shape[1])
 assert rawdata.shape[1] == 1024
 
 data = bin_data(rawdata, args.timebin_sz, args.freqbin_sz)
-rfifind = bin_data(pl.read_count(1000), args.timebin_sz, args.freqbin_sz)
+rfifind = bin_data(plhi.read_count(1000), args.timebin_sz, args.freqbin_sz)
 rfirmdata = remove_rfi(data, rfifind, 0)
 plt.imshow(
-        rfirmdata.transpose(),
+        np.clip(rfirmdata, 0, 5).transpose(),
         aspect='auto',
         extent=[0, args.timedelta.to(u.ms).value, 400, 800]
 )
