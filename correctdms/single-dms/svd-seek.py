@@ -36,10 +36,13 @@ parser.add_argument(
 )
 parser.add_argument('runname', default='myrun', help='the name of the run')
 parser.add_argument('--data', nargs='+', default=[], help='the baseband data files')
+parser.add_argument(
+        '--out', nargs='?', help='where the data, plots and logs are'
+)
 args = parser.parse_args()
 
 logging.basicConfig(
-        filename='logs/{}.log'.format(args.runname),
+        filename=f'{args.out}/logs/{args.runname}.log'
         level=logging.DEBUG
 )
 
