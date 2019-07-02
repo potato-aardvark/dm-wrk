@@ -1,7 +1,6 @@
 from pipeline import *
 
 import argparse
-import logging
 import numpy as np
 from numpy.linalg import svd
 import astropy.units as u
@@ -37,21 +36,18 @@ parser.add_argument(
 )
 parser.add_argument(
         'dm_index',
-        type=float,
+        type=int,
         help='the dm index'
 )
 parser.add_argument('runname', default='myrun', help='the name of the run')
 parser.add_argument('--data', nargs='+', default=[], help='the baseband data files')
+parser.add_argument('--out', nargs='?', help='where to write the data')
 args = parser.parse_args()
 
-logging.basicConfig(
-        filename='seek-data/{}.log'.format(args.runname),
-        level=logging.DEBUG
-)
-
-logging.info(args.runname)
 
 fhv = vdif.open(args.data)
+output = open(args.out, 'w')
+
 
 def get_svd_data(data):
     """Get the rating of the svd fit for the dedispersed data."""
@@ -75,28 +71,12 @@ def setup_pipeline(dm):
 def get_svd_dm(dm):
     return get_svd_pipeline(setup_pipeline(dm))
 
-curr_max_upper_svd = -1
-curr_max_lower_svd = -1
-curr_best_upper_dm = None
-curr_best_lower_dm = None
-
-for curr_dm in [
-        np.arange(args.dm, args.dm2 + args.dm_step_sz, args.dm_step_sz)\
+curr_dm = np.arange(args.dm, args.dm2 + args.dm_step_sz, args.dm_step_sz)\
                 [args.dm_index]
-        ]:
-    pl = setup_pipeline(curr_dm)
-    data = pl.read_time(args.timedelta)
-    upper_data = data[:, :int(np.floor(np.interp(540, [400, 800], [1023, 0])))]
-    lower_data = data[:, int(np.ceil(np.interp(540, [400, 800], [1023, 0]))):]
-    svd_upper = svd(upper_data, full_matrices=False)[1][0] 
-    svd_lower = svd(lower_data, full_matrices=False)[1][0]
-    if svd_upper > curr_max_upper_svd:
-        curr_max_upper_svd = svd_upper
-        curr_best_upper_dm = curr_dm
-    if svd_lower > curr_max_lower_svd:
-        curr_max_lower_svd = svd_lower
-        curr_best_lower_dm = curr_dm
-    logging.info('{:.9f} {:.9f} {:.9f}'.format(curr_dm, svd_upper, svd_lower)) 
-
-logging.info('best upper/lower dm: {:.9f} {:.9f}'.format(curr_best_upper_dm, curr_best_lower_dm)) 
-
+pl = setup_pipeline(curr_dm)
+data = pl.read_time(args.timedelta)
+upper_data = data[:, :int(np.floor(np.interp(540, [400, 800], [1023, 0])))]
+lower_data = data[:, int(np.ceil(np.interp(540, [400, 800], [1023, 0]))):]
+svd_upper = svd(upper_data, full_matrices=False)[1][0] 
+svd_lower = svd(lower_data, full_matrices=False)[1][0]
+output.write('{} {} {}'.format(curr_dm, svd_upper, svd_lower))
