@@ -49,6 +49,11 @@ except KeyError:
 # prefer to plot nans, but svd needs zeros
 svd_data = plm.remove_rfi(data, data[-100:], fill=0)
 data = plm.remove_rfi(data, data[-100:], fill='nan')
+# subtract off-pulse stuff
+offpulse = np.nanmean(data[:100])
+data -= offpulse
+svd_data -= offpulse
+# bin
 binneddata = plm.bin_data(
         data, args.time_bin_sz, args.freq_bin_sz
 )
@@ -60,6 +65,7 @@ binnedsvd_data = plm.bin_data(
 binneddata[:, 11] = np.nan
 binnedsvd_data[:, 11] = 0
 
+# SVD
 bdat_u, bdat_s, bdat_vh = la.svd(binnedsvd_data.T, full_matrices=False)
 if bdat_vh[0, 0] < 0:
     bdat_u *= -1
