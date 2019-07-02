@@ -11,13 +11,8 @@ import matplotlib.pyplot as plt
 import os  # for path.join
 import argparse
 
-FREQ_CUTOFF = int(np.floor(np.interp(540, [400, 800], [1023, 0])))
-assert isinstance(FREQ_CUTOFF, int)
+freq2index = lambda f: int(np.floor(np.interp(f, [400, 800], [1023, 0])))
 
-# python makeplot.py starttime timeinterval dm runname 
-#   timebin_sz freqbin_sz --data files
-# 
-# timeinterval in ms
 parser = argparse.ArgumentParser()
 parser.add_argument(
         'starttime',
@@ -65,10 +60,12 @@ parser.add_argument(
         help='where to save the data'
 )
 parser.add_argument('--data', nargs='+', default=[], help='the data files')
+parser.add_argument('--freqsplit', default=None, help='where the split is')
 args = parser.parse_args()
 
 datasave_loc = 'makeplot-data/'
 plotsave_loc = 'makeplot-plots/'
+freqsplit = freq2index(args.freqsplit)
 
 # set up the pipeline
 plhi = WaterfallIntensityPipeline(
@@ -88,7 +85,7 @@ pllo.outstream.seek(args.starttime)
 rawdatalo = pllo.read_time_div(args.timedelta, args.timebin_sz)
 
 rawdata = np.concatenate(
-        (rawdatahi[:, :FREQ_CUTOFF], rawdatalo[:, FREQ_CUTOFF:]),
+        (rawdatahi[:, :freqsplit], rawdatalo[:, freqsplit:]),
         axis=1
 )
 
@@ -108,6 +105,13 @@ plt.ylabel('freq (MHz)')
 if plotsave_loc:
     plt.savefig(os.path.join(plotsave_loc, args.runname + '.png'))
 if datasave_loc:
-    np.savez(os.path.join(datasave_loc, args.runname + '.npz'), rawdata)
+    np.savez(
+        os.path.join(datasave_loc, args.runname + '.npz'),
+        data=rawdata,
+        freqind=freqsplit,       # the index
+        freqval=args.freqsplit,  # the value (MHz)
+        upperdm=args.dm,
+        lowerdm=args.dm2
+    )
 
 print(svd(rfirmdata)[1][0])
