@@ -1,5 +1,4 @@
-# TODO: correct reference_frequency. Should be 540 MHz + corresponding
-# time adjustment if not negligible
+'''Read from baseband and save data to disc as .npz file'''
 
 from pipeline import *
 import numpy as np
@@ -39,14 +38,14 @@ parser.add_argument(
         'timebin_sz',
         type=int,
         nargs='?',
-        default=10,
+        default=1,
         help='the size of the time bins'
 )
 parser.add_argument(
         'freqbin_sz',
         type=int,
         nargs='?',
-        default=4,
+        default=1,
         help='the size of the frequency bins'
 )
 parser.add_argument(
@@ -89,7 +88,6 @@ rawdata = np.concatenate(
         axis=1
 )
 
-print(rawdata.shape[1])
 assert rawdata.shape[1] == 1024
 
 data = bin_data(rawdata, args.timebin_sz, args.freqbin_sz)

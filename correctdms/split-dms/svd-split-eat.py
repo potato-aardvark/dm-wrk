@@ -6,6 +6,7 @@ import numpy as np
 import numpy.linalg as la
 import scipy.optimize as opt
 import os
+import astropy.units as u
 
 parser = argparse.ArgumentParser(description='Do the SVD.')
 pltparser = parser.add_argument_group(
@@ -36,15 +37,12 @@ if plot_save_loc:
     import matplotlib.pyplot as plt
     plt.rcParams['figure.figsize'] = (16, 12)
 
-data = np.load(args.npz_loc)
-# I don't remember how the data was saved
-try:
-    data = data['arr_0']
-except KeyError:
-    try:
-        data = data['data']
-    except KeyError:
-        data = data['fulldata']
+npz = np.load(args.npz_loc)
+data = npz['data']
+upperdm = float(npz['upperdm']) * u.pc/u.cm**3
+lowerdm = float(npz['lowerdm']) * u.pc/u.cm**3
+freq_index = int(npz['freqind'])
+freqval = float(npz['freqval']) * u.MHz
 
 # prefer to plot nans, but svd needs zeros
 svd_data = plm.remove_rfi(data, data[-100:], fill=0)
@@ -91,7 +89,6 @@ if plot_save_loc:
     )
     cb_min = np.nanmin([svd_resid, binneddata, svd_modeone])
     cb_max = np.nanmax([svd_resid, binneddata, svd_modeone])
-    print(cb_min, cb_max)
 
     im = ax0.imshow(
             binneddata.T,
@@ -107,7 +104,17 @@ if plot_save_loc:
             vmin=cb_min, vmax=cb_max, aspect='auto'
     )
     # plt.tight_layout()
-    plt.suptitle(args.suptitle)
+    if freq_index == -1:
+        # i.e., single dm
+        plt.suptitle(
+                '{}, dm = {}'.format(args.suptitle, upperdm)
+        )
+    else:
+        # i.e., 2 dms
+        plt.suptitle(
+                '{}, dm = {} for freq < {f}, dm = {} for freq >= {f}'\
+                        .format(args.suptitle, lowerdm, upperdm, f=freqval)
+        )
     ax0.set_title('data')
     ax1.set_title('model')
     ax2.set_title('residual')
