@@ -7,6 +7,7 @@ import numpy.linalg as la
 import scipy.optimize as opt
 import os
 import astropy.units as u
+import astropy.time
 
 parser = argparse.ArgumentParser(description='Do the SVD.')
 pltparser = parser.add_argument_group(
@@ -25,7 +26,6 @@ pltparser.add_argument('minfreq', type=float, nargs='?', default=400,
         help='the minimum frequency')
 pltparser.add_argument('maxfreq', type=float, nargs='?', default=800,
         help='the maximum frequency')
-pltparser.add_argument('suptitle', nargs='?')
 
 args = parser.parse_args()
 
@@ -39,10 +39,11 @@ if plot_save_loc:
 
 npz = np.load(args.npz_loc)
 data = npz['data']
-upperdm = float(npz['upperdm']) * u.pc/u.cm**3
-lowerdm = float(npz['lowerdm']) * u.pc/u.cm**3
-freq_index = int(npz['freqind'])
-freqval = float(npz['freqval']) * u.MHz
+upperdm = float(npz['upperdm'] or 0) * u.pc/u.cm**3
+lowerdm = float(npz['lowerdm'] or 0) * u.pc/u.cm**3
+freq_index = int(npz['freqind'] or 0)
+freqval = float(npz['freqval'] or 0) * u.MHz
+starttime = astropy.time.Time(npz['starttime'])
 
 # prefer to plot nans, but svd needs zeros
 svd_data = plm.remove_rfi(data, data[-100:], fill=0)
@@ -103,17 +104,21 @@ if plot_save_loc:
             extent=[0, args.time_total, args.minfreq, args.maxfreq],
             vmin=cb_min, vmax=cb_max, aspect='auto'
     )
+    ax0.set_ylabel('frequency (MHz)')
+    ax0.set_xlabel('time (ms)')
+    ax1.set_xlabel('time (ms)')
+    ax2.set_xlabel('time (ms)')
     # plt.tight_layout()
     if freq_index == -1:
         # i.e., single dm
         plt.suptitle(
-                '{}, dm = {}'.format(args.suptitle, upperdm)
+                'Pulse at {}, dm = {}'.format(starttime, upperdm)
         )
     else:
         # i.e., 2 dms
         plt.suptitle(
-                '{}, dm = {} for freq < {f}, dm = {} for freq >= {f}'\
-                        .format(args.suptitle, lowerdm, upperdm, f=freqval)
+                'Pulse at {}, dm = {} for freq < {f}, dm = {} for freq >= {f}'\
+                        .format(starttime, lowerdm, upperdm, f=freqval)
         )
     ax0.set_title('data')
     ax1.set_title('model')

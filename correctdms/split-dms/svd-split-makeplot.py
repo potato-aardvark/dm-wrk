@@ -64,7 +64,7 @@ args = parser.parse_args()
 
 datasave_loc = 'makeplot-data/'
 plotsave_loc = 'makeplot-plots/'
-freqsplit = freq2index(args.freqsplit)
+freqsplit = None if args.freqsplit is None else freq2index(args.freqsplit)
 
 # set up the pipeline
 plhi = WaterfallIntensityPipeline(
@@ -75,19 +75,24 @@ plhi = WaterfallIntensityPipeline(
 plhi.outstream.seek(args.starttime)
 rawdatahi = plhi.read_time_div(args.timedelta, args.timebin_sz)
 
-pllo = WaterfallIntensityPipeline(
-        args.data, args.dm2, reference_frequency=800*u.MHz,
-        samples_per_frame=2**18,
-        frequencies=np.linspace(800, 400, 1024)*u.MHz, sideband=1
-)
-pllo.outstream.seek(args.starttime)
-rawdatalo = pllo.read_time_div(args.timedelta, args.timebin_sz)
+if freqsplit is None:
+    pllo = plhi
+    rawdata = rawdatahi
+else:
+    pllo = WaterfallIntensityPipeline(
+            args.data, args.dm2, reference_frequency=800*u.MHz,
+            samples_per_frame=2**18,
+            frequencies=np.linspace(800, 400, 1024)*u.MHz, sideband=1
+    )
+    pllo.outstream.seek(args.starttime)
+    rawdatalo = pllo.read_time_div(args.timedelta, args.timebin_sz)
+    
+    rawdata = np.concatenate(
+            (rawdatahi[:, :freqsplit], rawdatalo[:, freqsplit:]),
+            axis=1
+    )
 
-rawdata = np.concatenate(
-        (rawdatahi[:, :freqsplit], rawdatalo[:, freqsplit:]),
-        axis=1
-)
-
+print(rawdata.shape)
 assert rawdata.shape[1] == 1024
 
 data = bin_data(rawdata, args.timebin_sz, args.freqbin_sz)
@@ -106,10 +111,9 @@ if datasave_loc:
     np.savez(
         os.path.join(datasave_loc, args.runname + '.npz'),
         data=rawdata,
-        freqind=freqsplit,       # the index
+        freqind=freqsplit if freqsplit is not None else -1,       # the index
         freqval=args.freqsplit,  # the value (MHz)
         upperdm=args.dm,
-        lowerdm=args.dm2
+        lowerdm=args.dm2,
+        starttime=args.starttime
     )
-
-print(svd(rfirmdata)[1][0])
