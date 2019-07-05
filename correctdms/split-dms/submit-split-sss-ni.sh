@@ -24,7 +24,7 @@ rm -rf /dev/shm/workdir
 
 trap "cleanup_ramdisk" TERM
 
-parallel --joblog slurm-$SLURM_JOBID.log -j 8 "python single-split-seek.py 2018-08-16T10:39:29.900 25 26.67 26.77 0.0001 {} 85.3snrun --data $SCRATCH/recalled/B0329+54/20180816T103808Z_aro_vdif/untarred/{0000000..0001999}.vdif --out /dev/shm/workdir/{}.outtxt" ::: {0..1000}  ###
-# use 20 tasks instead of 40 or 80 because memory
+parallel --joblog slurm-$SLURM_JOBID.log -j 8 "python single-split-seek.py 2018-08-16T10:39:29.900 25 26.67 26.77 0.0001 {} 85.3snrun --data $SCRATCH/recalled/B0329+54/20180816T103808Z_aro_vdif/untarred/{0000000..0001999}.vdif --out /dev/shm/workdir/{}.outtxt --freqsplit 540" ::: {0..1000}  ###
+# use 8 tasks instead of 40 or 80 because memory
 
 cleanup_ramdisk

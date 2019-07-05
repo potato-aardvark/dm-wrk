@@ -42,7 +42,19 @@ parser.add_argument(
 parser.add_argument('runname', default='myrun', help='the name of the run')
 parser.add_argument('--data', nargs='+', default=[], help='the baseband data files')
 parser.add_argument('--out', nargs='?', help='where to write the data')
+parser.add_argument(
+        '--freqsplit',
+        default=None,
+        type=float,
+        help='where the frequency split is (MHz)'
+)
+
 args = parser.parse_args()
+
+if args.freqsplit is None:
+    freqsplit_ind = None
+else:
+    freqsplit_ind = int(np.floor(np.interp(540, [400, 800], [1023, 0])))
 
 
 fhv = vdif.open(args.data)
@@ -75,8 +87,13 @@ curr_dm = np.arange(args.dm, args.dm2 + args.dm_step_sz, args.dm_step_sz)\
                 [args.dm_index]
 pl = setup_pipeline(curr_dm)
 data = pl.read_time(args.timedelta)
-upper_data = data[:, :int(np.floor(np.interp(540, [400, 800], [1023, 0])))]
-lower_data = data[:, int(np.ceil(np.interp(540, [400, 800], [1023, 0]))):]
-svd_upper = svd(upper_data, full_matrices=False)[1][0] 
-svd_lower = svd(lower_data, full_matrices=False)[1][0]
-output.write('{} {} {}'.format(curr_dm, svd_upper, svd_lower))
+
+if freqsplit_ind is None:
+    svd = svd(data, full_matrices=False)[1][0]
+    output.write('{} {}'.format(curr_dm, svd)
+else:
+    upper_data = data[:, :int(np.floor(np.interp(540, [400, 800], [1023, 0])))]
+    lower_data = data[:, int(np.ceil(np.interp(540, [400, 800], [1023, 0]))):]
+    svd_upper = svd(upper_data, full_matrices=False)[1][0] 
+    svd_lower = svd(lower_data, full_matrices=False)[1][0]
+    output.write('{} {} {}'.format(curr_dm, svd_upper, svd_lower))
