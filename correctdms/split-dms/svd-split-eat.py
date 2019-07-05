@@ -37,7 +37,7 @@ if plot_save_loc:
     import matplotlib.pyplot as plt
     plt.rcParams['figure.figsize'] = (16, 12)
 
-npz = np.load(args.npz_loc)
+npz = np.load(args.npz_loc, allow_pickle=True)
 data = npz['data']
 upperdm = float(npz['upperdm'] or 0) * u.pc/u.cm**3
 lowerdm = float(npz['lowerdm'] or 0) * u.pc/u.cm**3
