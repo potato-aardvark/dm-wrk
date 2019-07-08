@@ -90,7 +90,7 @@ data = pl.read_time(args.timedelta)
 
 if freqsplit_ind is None:
     svd = svd(data, full_matrices=False)[1][0]
-    output.write('{} {}\n'.format(curr_dm, svd)
+    output.write('{} {}\n'.format(curr_dm, svd))
 else:
     upper_data = data[:, :int(np.floor(np.interp(540, [400, 800], [1023, 0])))]
     lower_data = data[:, int(np.ceil(np.interp(540, [400, 800], [1023, 0]))):]
