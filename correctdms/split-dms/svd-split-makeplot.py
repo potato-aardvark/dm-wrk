@@ -1,6 +1,7 @@
 '''Read from baseband and save data to disc as .npz file'''
 
 from pipeline import *
+from datareduce import datareduce
 import numpy as np
 from numpy.linalg import svd
 from baseband import vdif
@@ -66,34 +67,9 @@ datasave_loc = 'makeplot-data/'
 plotsave_loc = 'makeplot-plots/'
 freqsplit = None if args.freqsplit is None else freq2index(args.freqsplit)
 
-# set up the pipeline
-plhi = WaterfallIntensityPipeline(
-        args.data, args.dm, reference_frequency=800*u.MHz,
-        samples_per_frame=2**18,
-        frequencies=np.linspace(800, 400, 1024)*u.MHz, sideband=1
-)
-plhi.outstream.seek(args.starttime)
-rawdatahi = plhi.read_time_div(args.timedelta, args.timebin_sz)
-
-if freqsplit is None:
-    pllo = plhi
-    rawdata = rawdatahi
-else:
-    pllo = WaterfallIntensityPipeline(
-            args.data, args.dm2, reference_frequency=800*u.MHz,
-            samples_per_frame=2**18,
-            frequencies=np.linspace(800, 400, 1024)*u.MHz, sideband=1
-    )
-    pllo.outstream.seek(args.starttime)
-    rawdatalo = pllo.read_time_div(args.timedelta, args.timebin_sz)
-    
-    rawdata = np.concatenate(
-            (rawdatahi[:, :freqsplit], rawdatalo[:, freqsplit:]),
-            axis=1
-    )
-
-print(rawdata.shape)
-assert rawdata.shape[1] == 1024
+# reduce the data: i.e., dedisperse, read, etc.
+rawdata = datareduce(args.data, args.dm, args.dm2, args.timedelta,
+        args.timebin_sz, args.freqbin_sz, freqsplit)
 
 data = bin_data(rawdata, args.timebin_sz, args.freqbin_sz)
 rfifind = bin_data(plhi.read_count(1000), args.timebin_sz, args.freqbin_sz)
