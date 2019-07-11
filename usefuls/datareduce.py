@@ -1,6 +1,6 @@
 '''Literally just contains a function to reduce data'''
 
-import numpy
+import numpy as np
 import matplotlib.pyplot as plt
 import pipeline as plm
 from baseband import vdif
@@ -26,31 +26,35 @@ def datareduce(data, dmhi, dmlo, starttime, timedelta, timebin_sz, freqbin_sz,
 
     Returns
     ------
-    the data, duh
+    the absolute start time
+    the data, duh (no rfi removed yet)
+    the absolute end time
     '''
-    plhi = WaterfallIntensityPipeline(
-            args.data, args.dm, reference_frequency=800*u.MHz,
+    plhi = plm.WaterfallIntensityPipeline(
+            data, dmhi, reference_frequency=800*u.MHz,
             samples_per_frame=2**18,
             frequencies=np.linspace(800, 400, 1024)*u.MHz, sideband=1
     )
-    plhi.outstream.seek(args.starttime)
-    rawdatahi = plhi.read_time_div(args.timedelta, args.timebin_sz)
+    plhi.outstream.seek(starttime)
+    absstart = plhi.outstream.tell('time')
+    rawdatahi = plhi.read_time_div(timedelta, timebin_sz)
+    absend = plhi.outstream.tell('time')
     
     if freqsplit is None:
         pllo = plhi
         rawdata = rawdatahi
     else:
-        pllo = WaterfallIntensityPipeline(
-                args.data, args.dm2, reference_frequency=800*u.MHz,
+        pllo = plm.WaterfallIntensityPipeline(
+                data, dmlo, reference_frequency=800*u.MHz,
                 samples_per_frame=2**18,
                 frequencies=np.linspace(800, 400, 1024)*u.MHz, sideband=1
         )
-        pllo.outstream.seek(args.starttime)
-        rawdatalo = pllo.read_time_div(args.timedelta, args.timebin_sz)
+        pllo.outstream.seek(starttime)
+        rawdatalo = pllo.read_time_div(timedelta, timebin_sz)
         
         rawdata = np.concatenate(
                 (rawdatahi[:, :freqsplit], rawdatalo[:, freqsplit:]),
                 axis=1
         )
     
-    return rawdata
+    return absstart, rawdata, absend

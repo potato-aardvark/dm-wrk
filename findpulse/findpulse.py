@@ -31,6 +31,7 @@ pl = plm.WaterfallIntensityPipeline(fh,
 
 
 for i in range(int(args.start), int(args.end)):
+    pl.outstream.seek(args.timedelta * i)
     data = pl.read_time(args.timedelta)
     data = plm.remove_rfi(data)
     data = np.nansum(data)
