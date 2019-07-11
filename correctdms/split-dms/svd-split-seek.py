@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 from pipeline import *
 
 import argparse

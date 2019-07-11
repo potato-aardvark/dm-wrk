@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''Read from baseband and save data to disc as .npz file'''
 
 from pipeline import *
@@ -49,16 +50,6 @@ parser.add_argument(
         default=1,
         help='the size of the frequency bins'
 )
-parser.add_argument(
-        'plotsave_loc',
-        nargs='?',
-        help='where to save the plots'
-)
-parser.add_argument(
-        'datasave_loc', 
-        nargs='?',
-        help='where to save the data'
-)
 parser.add_argument('--data', nargs='+', default=[], help='the data files')
 parser.add_argument('--freqsplit', default=None, help='where the split is')
 args = parser.parse_args()
@@ -68,12 +59,11 @@ plotsave_loc = 'makeplot-plots/'
 freqsplit = None if args.freqsplit is None else freq2index(args.freqsplit)
 
 # reduce the data: i.e., dedisperse, read, etc.
-rawdata = datareduce(args.data, args.dm, args.dm2, args.timedelta,
-        args.timebin_sz, args.freqbin_sz, freqsplit)
+_, rawdata, _ = datareduce(args.data, args.dm, args.dm2, args.starttime,
+        args.timedelta, args.timebin_sz, args.freqbin_sz, freqsplit)
 
 data = bin_data(rawdata, args.timebin_sz, args.freqbin_sz)
-rfifind = bin_data(plhi.read_count(1000), args.timebin_sz, args.freqbin_sz)
-rfirmdata = remove_rfi(data, rfifind, 0)
+rfirmdata = remove_rfi(data, fill=0)
 plt.imshow(
         np.clip(rfirmdata, 0, 5).transpose(),
         aspect='auto',
