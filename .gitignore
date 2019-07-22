@@ -166,3 +166,4 @@ wheres.py
 logs/
 out*
 anim/
+findpulse/*.png
