@@ -24,11 +24,10 @@ fh = vdif.open(args.data)
 pl = plm.WaterfallIntensityPipeline(fh,
         args.dm,
         800*u.MHz,
-        2**20,    ###
+        2**19,    ###
         np.linspace(800, 400, 1024)*u.MHz,
         1
 )
-
 
 for i in range(int(args.start), int(args.end)):
     pl.outstream.seek(args.timedelta * i)
