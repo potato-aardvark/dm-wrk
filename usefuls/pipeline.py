@@ -17,7 +17,7 @@ class WaterfallIntensityPipeline:
             reference_frequency=reference_frequency,
             samples_per_frame=samples_per_frame, 
             frequency=frequencies, 
-            sideband=sideband, FFT=fft)
+            sideband=sideband)
         self.squared = Square(self.dedispersed)
 
         self.outstream = self.squared
