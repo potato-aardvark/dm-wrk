@@ -8,14 +8,9 @@ import pipeline as plm
 from baseband import vdif
 
 parser = argparse.ArgumentParser()
-parser.add_argument(
-        'timedelta',
-        type=(lambda s: time.TimeDelta(float(s) / 1000, format='sec')),
-        help='the time delta in ms'
-)
 parser.add_argument('runname', default='myrun', help='the name of the run')
 parser.add_argument('start', type=float, help='the start time (in sec)')
-parser.add_argument('end', type=float, help='the end time (in sec)')
+parser.add_argument('pulsenum', type=int, help='the number of pulses')
 parser.add_argument('--data', help='the baseband data folder')
 parser.add_argument('--datafilestart', type=int, help='the first data file')
 parser.add_argument('--datafileend',
@@ -37,12 +32,16 @@ pl = plm.WaterfallIntensityPipeline(fh,
         np.linspace(800, 400, 1024)*u.MHz,
         1
 )
-pl.outstream.seek(args.start * u.s, 'start')
 
 PERIOD = 0.714519699726 * u.s
-READ_SZ = 20 * u.ms
+READ_SZ = 40 * u.ms
 
-while plm.outstream.tell(u.s).value < args.end:
-    data = plm.read_time(READ_SZ)
-    np.save(data, args.out)
-    plm.outstream.seek(PERIOD - READ_SZ, 'current')
+pl.outstream.seek(args.start * u.s, 'start')
+for i in range(args.pulsenum):
+    data = pl.read_time(READ_SZ)
+    np.savez(
+            args.out.format(pl.outstream.tell(u.s).value),
+            data=data,
+            time=pl.outstream.tell(u.s)
+    )
+    pl.outstream.seek(PERIOD - READ_SZ, 'current')
