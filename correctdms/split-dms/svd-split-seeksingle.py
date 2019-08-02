@@ -63,6 +63,9 @@ output = open(args.out, 'w')
 
 def get_svd_data(data):
     """Get the rating of the svd fit for the dedispersed data."""
+    # Subtract off-gate mean by assuming last 100 samples aren't part of
+    # the pulse
+    data -= data[-100:, :].mean()
     svd_s = svd(data)[1]
     return svd_s[0]
 
