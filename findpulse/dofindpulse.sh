@@ -11,4 +11,4 @@ module load use.own
 module load scintpipe
 
 # cd $PBS_O_WORKDIR
-python findpulse.py 5 run0818 $1 $2 $3 --data /mnt/scratch-lustre/haoxu/B0329data/0818/ --datafilestart 0 --datafileend 199999 --out /mnt/scratch-lustre/haoxu/out/testrun/0818find.txt
+python findpulse.py 5 run0818 $1 $2 $3 --data /mnt/scratch-lustre/haoxu/B0329data/0818/ --datafilestart 0 --datafileend 199999 --out /mnt/scratch-lustre/haoxu/out/testrun/0818find_test.txt
