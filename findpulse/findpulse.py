@@ -14,8 +14,9 @@ parser.add_argument(
         help='the time delta in ms'
 )
 parser.add_argument('runname', default='myrun', help='the name of the run')
-parser.add_argument('start', type=float, help='the start time (in sec)')
-parser.add_argument('end', type=float, help='the end time (in sec)')
+parser.add_argument('start', type=int, help='the start index')
+parser.add_argument('end', type=int, help='the end index')
+parser.add_argument('skip', type=int, default=None, help='the skip slice bit')
 parser.add_argument('--data', help='the baseband data folder')
 parser.add_argument('--datafilestart', type=int, help='the first data file')
 parser.add_argument('--datafileend',
@@ -37,12 +38,11 @@ pl = plm.WaterfallIntensityPipeline(fh,
         np.linspace(800, 400, 1024)*u.MHz,
         1
 )
-pl.outstream.seek(args.start * u.s, 'start')
 
-PERIOD = 0.714519699726 * u.s
-READ_SZ = 20 * u.ms
-
-while plm.outstream.tell(u.s).value < args.end:
-    data = plm.read_time(READ_SZ)
-    np.save(data, args.out)
-    plm.outstream.seek(PERIOD - READ_SZ, 'current')
+for i in range(int(args.start), int(args.end), int(args.skip)):
+    pl.outstream.seek(args.timedelta * i)
+    data = pl.read_time(args.timedelta)
+    data = plm.remove_rfi(data)
+    data = np.nansum(data)
+    with open(args.out, 'a') as f:
+        f.write('{} {}\n'.format(i, data))
