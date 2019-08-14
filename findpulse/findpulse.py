@@ -4,15 +4,12 @@ import os
 import numpy as np
 import astropy.units as u
 from astropy import time
-import pipeline as plm
 from baseband import vdif
+from scintillometry.integration import Stack
+from scintillometry.dispersion import Dedisperse
+from scintillometry.functions import Square
 
 parser = argparse.ArgumentParser()
-parser.add_argument(
-        'timedelta',
-        type=(lambda s: time.TimeDelta(float(s) / 1000, format='sec')),
-        help='the time delta in ms'
-)
 parser.add_argument('runname', default='myrun', help='the name of the run')
 parser.add_argument('start', type=int, help='the start index')
 parser.add_argument('end', type=int, help='the end index')
@@ -25,12 +22,15 @@ parser.add_argument('--out', nargs='?', help='where to write the data')
 parser.add_argument('--dm', type=float, default=26.67, help='dm')
 args = parser.parse_args()
 
+period = 0.714519699726 * u.s
+
 fh = vdif.open(
     [
         os.path.join(args.data, '{:0>7}.vdif'.format(i))
         for i in range(args.datafilestart, args.datafileend + 1)
     ]
 )
+
 pl = plm.WaterfallIntensityPipeline(fh,
         args.dm,
         800*u.MHz,
